@@ -1,0 +1,29 @@
+# WM-kicktipp
+
+Kleine React/Vite-App fuer eine WM-2026-Kicktipp-Runde.
+
+## Setup
+
+1. Supabase-Projekt anlegen.
+2. SQL aus `supabase/schema.sql` im Supabase SQL Editor ausfuehren.
+3. In Vercel diese Environment Variables setzen:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `ADMIN_PASSWORD`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+4. Lokal starten:
+
+```bash
+npm install
+npm run dev
+```
+
+## Spieltags-Logik
+
+Kicktipp teilt die Gruppenphase in 10 Spieltage. Die App aggregiert diese zu den drei echten WM-Gruppenspieltagen:
+
+- WM Spieltag 1: Kicktipp 1-3
+- WM Spieltag 2: Kicktipp 4-6
+- WM Spieltag 3: Kicktipp 7-10
+
+Im Admin-Bereich werden die Punkte pro Kicktipp-Spieltag eingegeben. Die Tabelle berechnet daraus automatisch Gesamtpunkte und WM-Spieltage.
