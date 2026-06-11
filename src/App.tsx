@@ -356,6 +356,8 @@ function AdminPanel({
       setIsLoggedIn(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Login fehlgeschlagen.");
+      clearStoredPassword();
+      setIsLoggedIn(false);
     }
   }
 

@@ -51,7 +51,11 @@ function adminClient() {
 }
 
 function parseBody(req: any) {
-  return typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  if (typeof req.body === "string") {
+    if (!req.body) return {};
+    return JSON.parse(req.body);
+  }
+  return req.body ?? {};
 }
 
 function isUuid(value: string) {

@@ -2,6 +2,22 @@ import type { TournamentState } from "../types";
 
 const passwordKey = "wm-kicktipp-admin-password";
 
+async function extractApiMessage(response: Response, fallback: string) {
+  try {
+    const text = await response.text();
+    if (!text) return fallback;
+
+    try {
+      const parsed = JSON.parse(text) as { error?: string; message?: string };
+      return parsed.error ?? parsed.message ?? text;
+    } catch {
+      return text;
+    }
+  } catch {
+    return fallback;
+  }
+}
+
 export function getStoredPassword(): string {
   return sessionStorage.getItem(passwordKey) ?? "";
 }
@@ -14,11 +30,12 @@ export async function loginAdmin(password: string): Promise<void> {
   const response = await fetch("/api/admin-login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ password: password.trim() }),
   });
 
   if (!response.ok) {
-    throw new Error("Passwort stimmt nicht.");
+    const message = await extractApiMessage(response, "Passwort stimmt nicht.");
+    throw new Error(message);
   }
 
   sessionStorage.setItem(passwordKey, password);
@@ -30,7 +47,8 @@ export async function loadAdminState(): Promise<TournamentState> {
   });
 
   if (!response.ok) {
-    throw new Error("Admin-Daten konnten nicht geladen werden.");
+    const message = await extractApiMessage(response, "Admin-Daten konnten nicht geladen werden.");
+    throw new Error(message);
   }
 
   return response.json();
@@ -47,7 +65,8 @@ export async function saveAdminState(state: TournamentState): Promise<Tournament
   });
 
   if (!response.ok) {
-    throw new Error("Speichern fehlgeschlagen.");
+    const message = await extractApiMessage(response, "Speichern fehlgeschlagen.");
+    throw new Error(message);
   }
 
   return response.json();
