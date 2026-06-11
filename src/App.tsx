@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  IconArchive,
+  IconCalendarWeek,
+  IconChevronRight,
+  IconMenu2,
+  IconSettings,
+  IconTrophy,
+} from "@tabler/icons-react";
 import { kicktippGroups } from "./data/schedule";
 import { clearStoredPassword, getStoredPassword, loadAdminState, loginAdmin, saveAdminState } from "./lib/adminApi";
 import { calculateLeaderboard, resizePlayers } from "./lib/points";
@@ -10,6 +18,7 @@ const wmDays = [1, 2, 3] as const;
 
 function App() {
   const [activeView, setActiveView] = useState<"table" | "schedule" | "admin">("table");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [state, setState] = useState<TournamentState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,26 +29,41 @@ function App() {
   }, []);
 
   const leaderboard = useMemo(() => calculateLeaderboard(state?.players ?? []), [state]);
+  const changeView = (view: "table" | "schedule" | "admin") => {
+    setActiveView(view);
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <a className="brand" href="#top" aria-label="WM Kicktipp Start">
           <span className="brand-mark">WM</span>
-          <span>Kicktipp</span>
+          <span>WM Kicktipp</span>
         </a>
-        <nav className="nav-tabs" aria-label="Hauptnavigation">
-          <button className={activeView === "table" ? "active" : ""} onClick={() => setActiveView("table")}>
-            Tabelle
-          </button>
-          <button className={activeView === "schedule" ? "active" : ""} onClick={() => setActiveView("schedule")}>
-            Spielplan
-          </button>
-          <button className={activeView === "admin" ? "active" : ""} onClick={() => setActiveView("admin")}>
-            Admin
-          </button>
-        </nav>
+        <button
+          className="menu-button"
+          type="button"
+          aria-label="Navigation oeffnen"
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((current) => !current)}
+        >
+          <IconMenu2 size={22} stroke={2.7} />
+        </button>
         <div className="flag-stripe" aria-hidden="true" />
+        {isMenuOpen && (
+          <nav className="menu-sheet" aria-label="Menue">
+            <button className={activeView === "table" ? "active" : ""} onClick={() => changeView("table")}>
+              Tabelle
+            </button>
+            <button className={activeView === "schedule" ? "active" : ""} onClick={() => changeView("schedule")}>
+              Spielplan
+            </button>
+            <button className={activeView === "admin" ? "active" : ""} onClick={() => changeView("admin")}>
+              Admin
+            </button>
+          </nav>
+        )}
       </header>
 
       <main id="top" className="workspace">
@@ -47,15 +71,15 @@ function App() {
           <img className="hero-ball" src="/assets/trionda-ball-mobile.jpg" alt="" aria-hidden="true" />
           <div className="flag-glow" aria-hidden="true" />
           <div>
-            <span className="hero-kicker">Deutschland-Tippspiel</span>
             <h1>{state?.tournament.name ?? "WM 2026"}</h1>
             <p>
-              Punkte fuer deine Kicktipp-Runde, automatisch zusammengefasst aus KT 1-3, KT 4-6 und KT 7-10.
+              Punkteuebersicht der Kicktipp-Runde. Kicktipp-Spieltag 1-3, 4-6 und 7-10 werden automatisch
+              zu den echten WM-Gruppenspieltagen zusammengefasst.
             </p>
           </div>
           <div className="status-strip" aria-label="Datenstatus">
             <span className={isSupabaseConfigured ? "status-dot live" : "status-dot demo"} />
-            {isSupabaseConfigured ? "Supabase verbunden" : "Demo-Daten"}
+            Stand: 11.06.2026, 11:24 Uhr
           </div>
         </section>
 
@@ -72,7 +96,38 @@ function App() {
           />
         )}
       </main>
+
+      <nav className="bottom-nav" aria-label="Hauptnavigation unten">
+        <BottomNavButton active={activeView === "table"} label="Tabelle" onClick={() => changeView("table")}>
+          <IconTrophy size={26} stroke={2.2} />
+        </BottomNavButton>
+        <BottomNavButton active={activeView === "schedule"} label="Spielplan" onClick={() => changeView("schedule")}>
+          <IconCalendarWeek size={26} stroke={2.2} />
+        </BottomNavButton>
+        <BottomNavButton active={activeView === "admin"} label="Admin" onClick={() => changeView("admin")}>
+          <IconSettings size={26} stroke={2.2} />
+        </BottomNavButton>
+      </nav>
     </div>
+  );
+}
+
+function BottomNavButton({
+  active,
+  label,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button className={active ? "active" : ""} type="button" onClick={onClick}>
+      {children}
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -81,28 +136,42 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
     <div className="layout-grid">
       <section className="panel leaderboard-panel">
         <div className="section-title">
-          <h2>Rangliste</h2>
+          <div className="title-group">
+            <IconTrophy className="section-icon" size={22} stroke={2.2} />
+            <h2>Tabelle</h2>
+          </div>
           <span>{rows.length} Spieler</span>
+        </div>
+        <div className="leaderboard-head" aria-hidden="true">
+          <span>Rang</span>
+          <span>Spieler</span>
+          <span>Gesamt</span>
+          <span>
+            ST1
+            <small>(KT 1-3)</small>
+          </span>
+          <span>
+            ST2
+            <small>(KT 4-6)</small>
+          </span>
+          <span>
+            ST3
+            <small>(KT 7-10)</small>
+          </span>
+          <span />
         </div>
         <div className="leaderboard-list">
           {rows.map((row) => (
             <article className="leaderboard-row" key={row.id}>
               <div className="rank-badge">{row.rank}</div>
-              <div className="player-summary">
-                <strong>{row.name}</strong>
-                <div className="matchday-chips" aria-label={`WM-Spieltag Punkte fuer ${row.name}`}>
-                  {wmDays.map((day) => (
-                    <span className="score-chip" key={day}>
-                      ST {day}
-                      <b>{row.wmPoints[day]}</b>
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="total-score">
-                <span>Gesamt</span>
-                <strong>{row.total}</strong>
-              </div>
+              <strong className="player-name">{row.name}</strong>
+              <strong className="total-score">{row.total}</strong>
+              {wmDays.map((day) => (
+                <span className="day-score" key={day}>
+                  {row.wmPoints[day]}
+                </span>
+              ))}
+              <IconChevronRight className="row-chevron" size={22} stroke={2.3} />
             </article>
           ))}
         </div>
@@ -110,7 +179,10 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
 
       <aside className="panel mapping-panel">
         <div className="section-title">
-          <h2>Mapping</h2>
+          <div className="title-group">
+            <IconCalendarWeek className="section-icon" size={22} stroke={2.2} />
+            <h2>Spieltag-Zuordnung</h2>
+          </div>
           <span>automatisch</span>
         </div>
         <div className="mapping-list">
@@ -118,6 +190,11 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
           <MappingRow wmDay={2} kicktipp="4-6" />
           <MappingRow wmDay={3} kicktipp="7-10" />
         </div>
+        <button className="archive-row" type="button">
+          <IconArchive size={25} stroke={2.1} />
+          <span>Archivierte Saisons</span>
+          <IconChevronRight size={24} stroke={2.3} />
+        </button>
       </aside>
     </div>
   );
@@ -126,12 +203,13 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
 function MappingRow({ wmDay, kicktipp }: { wmDay: number; kicktipp: string }) {
   return (
     <div className="mapping-row">
+      <span className="mapping-number">{wmDay}</span>
       <div>
         <strong>WM Spieltag {wmDay}</strong>
         <span>Kicktipp {kicktipp}</span>
       </div>
       <span className="arrow-icon" aria-hidden="true">
-        -&gt;
+        <IconChevronRight size={20} stroke={2.4} />
       </span>
     </div>
   );
