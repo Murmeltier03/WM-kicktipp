@@ -39,15 +39,18 @@ function App() {
             Admin
           </button>
         </nav>
+        <div className="flag-stripe" aria-hidden="true" />
       </header>
 
       <main id="top" className="workspace">
         <section className="page-heading">
+          <img className="hero-ball" src="/assets/trionda-ball-mobile.jpg" alt="" aria-hidden="true" />
+          <div className="flag-glow" aria-hidden="true" />
           <div>
+            <span className="hero-kicker">Deutschland-Tippspiel</span>
             <h1>{state?.tournament.name ?? "WM 2026"}</h1>
             <p>
-              Punkteuebersicht fuer die Kicktipp-Runde. Kicktipp-Spieltag 1-3, 4-6 und 7-10 werden automatisch
-              zu den echten WM-Gruppenspieltagen zusammengefasst.
+              Punkte fuer deine Kicktipp-Runde, automatisch zusammengefasst aus KT 1-3, KT 4-6 und KT 7-10.
             </p>
           </div>
           <div className="status-strip" aria-label="Datenstatus">
@@ -78,38 +81,30 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
     <div className="layout-grid">
       <section className="panel leaderboard-panel">
         <div className="section-title">
-          <h2>Tabelle</h2>
+          <h2>Rangliste</h2>
           <span>{rows.length} Spieler</span>
         </div>
-        <div className="table-scroll">
-          <table className="leaderboard-table">
-            <thead>
-              <tr>
-                <th>Rang</th>
-                <th>Spieler</th>
-                <th className="numeric">Gesamt</th>
-                <th className="numeric">Spieltag 1</th>
-                <th className="numeric">Spieltag 2</th>
-                <th className="numeric">Spieltag 3</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td>
-                    <span className="rank">{row.rank}</span>
-                  </td>
-                  <td className="player-cell">{row.name}</td>
-                  <td className="numeric total">{row.total}</td>
+        <div className="leaderboard-list">
+          {rows.map((row) => (
+            <article className="leaderboard-row" key={row.id}>
+              <div className="rank-badge">{row.rank}</div>
+              <div className="player-summary">
+                <strong>{row.name}</strong>
+                <div className="matchday-chips" aria-label={`WM-Spieltag Punkte fuer ${row.name}`}>
                   {wmDays.map((day) => (
-                    <td className="numeric" key={day}>
-                      {row.wmPoints[day]}
-                    </td>
+                    <span className="score-chip" key={day}>
+                      ST {day}
+                      <b>{row.wmPoints[day]}</b>
+                    </span>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
+              </div>
+              <div className="total-score">
+                <span>Gesamt</span>
+                <strong>{row.total}</strong>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -136,7 +131,7 @@ function MappingRow({ wmDay, kicktipp }: { wmDay: number; kicktipp: string }) {
         <span>Kicktipp {kicktipp}</span>
       </div>
       <span className="arrow-icon" aria-hidden="true">
-        →
+        -&gt;
       </span>
     </div>
   );
