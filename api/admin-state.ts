@@ -1,9 +1,3 @@
-import { randomUUID } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
-import { demoState } from "../src/data/demo";
-import { POINT_ROUNDS, emptyPoints } from "../src/lib/points";
-import type { Player, TournamentState } from "../src/types";
-
 type DbTournament = {
   slug: string;
   name: string;
@@ -22,9 +16,39 @@ type DbPointEntry = {
   points: number;
 };
 
+type Player = {
+  id: string;
+  name: string;
+  points: Record<string, number>;
+};
+
+type TournamentState = {
+  tournament: {
+    slug: string;
+    name: string;
+    playerCount: number;
+  };
+  players: Player[];
+};
+
+const POINT_ROUNDS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+].map((key) => ({ key }));
+
 function readHeaderValue(value: string | string[] | undefined) {
   const firstValue = Array.isArray(value) ? value[0] : value;
   return typeof firstValue === "string" ? firstValue.trim() : "";
+}
+
+function randomId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (character) =>
+    (Number(character) ^ (Math.random() * 16) >> (Number(character) / 4)).toString(16),
+  );
+}
+
+function emptyPoints(): Record<string, number> {
+  return Object.fromEntries(POINT_ROUNDS.map((round) => [round.key, 0])) as Record<string, number>;
 }
 
 function safePoints(value: unknown) {
@@ -49,9 +73,9 @@ function assertAdmin(req: any, res: any) {
   return true;
 }
 
-function adminClient() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function adminClient() {
+  const url = process.env.VITE_SUPABASE_URL?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!url || !serviceRoleKey) {
     throw new Error("Supabase admin environment is not configured");
@@ -61,6 +85,7 @@ function adminClient() {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY must be the secret/service-role key, not the publishable anon key");
   }
 
+  const { createClient } = await import("@supabase/supabase-js");
   return createClient(url, serviceRoleKey);
 }
 
@@ -79,13 +104,13 @@ function isUuid(value: string) {
 function normalizePlayers(players: Player[] = []) {
   return players.map((player) => ({
     ...player,
-    id: isUuid(player.id) ? player.id : randomUUID(),
+    id: isUuid(player.id) ? player.id : randomId(),
     name: (player.name ?? "").trim() || "Unbenannt",
   }));
 }
 
 async function loadState(): Promise<TournamentState> {
-  const supabase = adminClient();
+  const supabase = await adminClient();
   const { data: tournament, error: tournamentError } = await supabase
     .from("tournaments")
     .select("slug,name,player_count")
@@ -93,7 +118,16 @@ async function loadState(): Promise<TournamentState> {
     .maybeSingle<DbTournament>();
 
   if (tournamentError) throw tournamentError;
-  if (!tournament) return demoState;
+  if (!tournament) {
+    return {
+      tournament: {
+        slug: "wm-2026",
+        name: "WM 2026",
+        playerCount: 0,
+      },
+      players: [],
+    };
+  }
 
   const [{ data: players, error: playersError }, { data: pointEntries, error: pointsError }] = await Promise.all([
     supabase
@@ -136,8 +170,8 @@ async function loadState(): Promise<TournamentState> {
 }
 
 async function saveState(body: TournamentState): Promise<TournamentState> {
-  const supabase = adminClient();
-  const players = normalizePlayers(body.players);
+  const supabase = await adminClient();
+  const players = normalizePlayers(Array.isArray(body.players) ? body.players : []);
   const tournament = {
     slug: "wm-2026",
     name: body.tournament?.name?.trim() || "WM 2026",
