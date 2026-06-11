@@ -1,4 +1,5 @@
 import type { TournamentState } from "../types";
+import { POINT_ROUNDS } from "../lib/points";
 
 const names = ["Yanni", "Mats", "Lena", "Noah", "Sofia", "Timo"];
 
@@ -12,7 +13,10 @@ export const demoState: TournamentState = {
     id: `demo-${index + 1}`,
     name,
     points: Object.fromEntries(
-      Array.from({ length: 10 }, (_, day) => [day + 1, Math.max(0, 9 - index + ((day + index) % 4))]),
-    ) as Record<number, number>,
+      POINT_ROUNDS.map((round) => {
+        const base = round.key <= 10 ? Math.max(0, 9 - index + ((round.key + index) % 4)) : Math.max(0, 4 - index);
+        return [round.key, base];
+      }),
+    ) as Record<string, number>,
   })),
 };

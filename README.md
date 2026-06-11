@@ -25,5 +25,6 @@ Kicktipp teilt die Gruppenphase in 10 Spieltage. Die App aggregiert diese zu den
 - WM Spieltag 1: Kicktipp 1-3
 - WM Spieltag 2: Kicktipp 4-6
 - WM Spieltag 3: Kicktipp 7-10
+- K.o.-Runden: Achtelfinale, Viertelfinale, Halbfinale und Finale werden separat eingetragen
 
-Im Admin-Bereich werden die Punkte pro Kicktipp-Spieltag eingegeben. Die Tabelle berechnet daraus automatisch Gesamtpunkte und WM-Spieltage.
+Im Admin-Bereich werden die Punkte pro Kicktipp-Spieltag und K.o.-Runde eingegeben. Die Tabelle berechnet daraus automatisch Gesamtpunkte, WM-Spieltage und K.o.-Summen.

@@ -20,11 +20,20 @@ create table if not exists public.point_entries (
   id bigserial primary key,
   tournament_slug text not null references public.tournaments(slug) on delete cascade,
   player_id uuid not null references public.players(id) on delete cascade,
-  kicktipp_matchday integer not null check (kicktipp_matchday between 1 and 10),
+  kicktipp_matchday integer not null check (kicktipp_matchday between 1 and 14),
   points integer not null default 0 check (points >= 0),
   updated_at timestamptz not null default now(),
   unique (player_id, kicktipp_matchday)
 );
+
+alter table public.point_entries
+drop constraint if exists point_entries_kicktipp_matchday_check;
+
+alter table public.point_entries
+add constraint point_entries_kicktipp_matchday_check check (kicktipp_matchday between 1 and 14);
+
+comment on column public.point_entries.kicktipp_matchday is
+'1-10 = Kicktipp-Gruppenphase, 11 = Achtelfinale, 12 = Viertelfinale, 13 = Halbfinale, 14 = Finale';
 
 alter table public.tournaments enable row level security;
 alter table public.players enable row level security;

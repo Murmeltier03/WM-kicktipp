@@ -12,7 +12,7 @@ export type Match = {
 export type Player = {
   id: string;
   name: string;
-  points: Record<number, number>;
+  points: Record<string, number>;
 };
 
 export type TournamentState = {
@@ -27,5 +27,6 @@ export type TournamentState = {
 export type LeaderboardRow = Player & {
   total: number;
   wmPoints: Record<1 | 2 | 3, number>;
+  knockoutPoints: Record<"AF" | "VF" | "HF" | "F", number>;
   rank: number;
 };

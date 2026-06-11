@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { demoState } from "../src/data/demo";
-import { emptyPoints } from "../src/lib/points";
+import { POINT_ROUNDS, emptyPoints } from "../src/lib/points";
 import type { Player, TournamentState } from "../src/types";
 
 type DbTournament = {
@@ -150,15 +150,12 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
     if (playerInsertError) throw playerInsertError;
 
     const pointRows = players.flatMap((player) =>
-      Array.from({ length: 10 }, (_, index) => {
-        const kicktippMatchday = index + 1;
-        return {
-          tournament_slug: tournament.slug,
-          player_id: player.id,
-          kicktipp_matchday: kicktippMatchday,
-          points: Math.max(0, Number(player.points[kicktippMatchday] ?? 0)),
-        };
-      }),
+      POINT_ROUNDS.map((round) => ({
+        tournament_slug: tournament.slug,
+        player_id: player.id,
+        kicktipp_matchday: round.key,
+        points: Math.max(0, Number(player.points[round.key] ?? 0)),
+      })),
     );
 
     const { error: pointInsertError } = await supabase.from("point_entries").insert(pointRows);

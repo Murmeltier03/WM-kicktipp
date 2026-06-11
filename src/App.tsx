@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
-  IconArchive,
   IconCalendarWeek,
-  IconChevronRight,
+  IconInfoCircle,
   IconMenu2,
   IconSettings,
   IconTrophy,
+  IconX,
 } from "@tabler/icons-react";
 import { kicktippGroups } from "./data/schedule";
 import { clearStoredPassword, getStoredPassword, loadAdminState, loginAdmin, saveAdminState } from "./lib/adminApi";
-import { calculateLeaderboard, resizePlayers } from "./lib/points";
+import { KNOCKOUT_ROUNDS, POINT_ROUNDS, calculateLeaderboard, resizePlayers } from "./lib/points";
 import { isSupabaseConfigured, loadPublicState } from "./lib/supabase";
 import type { Player, TournamentState } from "./types";
 
-const kicktippDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const wmDays = [1, 2, 3] as const;
 
 function App() {
@@ -132,6 +132,8 @@ function BottomNavButton({
 }
 
 function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }) {
+  const [isMappingOpen, setIsMappingOpen] = useState(false);
+
   return (
     <div className="layout-grid">
       <section className="panel leaderboard-panel">
@@ -146,71 +148,101 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
           <span>Rang</span>
           <span>Spieler</span>
           <span>Gesamt</span>
-          <span>
-            ST1
-            <small>(KT 1-3)</small>
-          </span>
-          <span>
-            ST2
-            <small>(KT 4-6)</small>
-          </span>
-          <span>
-            ST3
-            <small>(KT 7-10)</small>
-          </span>
-          <span />
         </div>
         <div className="leaderboard-list">
-          {rows.map((row) => (
-            <article className="leaderboard-row" key={row.id}>
-              <div className="rank-badge">{row.rank}</div>
-              <strong className="player-name">{row.name}</strong>
-              <strong className="total-score">{row.total}</strong>
-              {wmDays.map((day) => (
-                <span className="day-score" key={day}>
-                  {row.wmPoints[day]}
-                </span>
-              ))}
-              <IconChevronRight className="row-chevron" size={22} stroke={2.3} />
-            </article>
-          ))}
-        </div>
-      </section>
+          {rows.map((row) => {
+            const scores = [
+              ...wmDays.map((day) => ({ label: `ST${day}`, value: row.wmPoints[day] })),
+              ...KNOCKOUT_ROUNDS.map((round) => ({
+                label: round.label,
+                value: row.knockoutPoints[round.label],
+              })),
+            ];
 
-      <aside className="panel mapping-panel">
-        <div className="section-title">
-          <div className="title-group">
-            <IconCalendarWeek className="section-icon" size={22} stroke={2.2} />
-            <h2>Spieltag-Zuordnung</h2>
-          </div>
-          <span>automatisch</span>
+            return (
+              <article className="leaderboard-row" key={row.id}>
+                <div className="rank-badge">{row.rank}</div>
+                <div className="player-score">
+                  <span className="player-name">{row.name}</span>
+                  <div className="round-breakdown" aria-label={`Punkte von ${row.name}`}>
+                    {scores.map((score) => (
+                      <span className="round-item" key={score.label}>
+                        <em>{score.label}</em>
+                        <strong>{score.value}</strong>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <strong className="total-score">{row.total}</strong>
+              </article>
+            );
+          })}
         </div>
-        <div className="mapping-list">
-          <MappingRow wmDay={1} kicktipp="1-3" />
-          <MappingRow wmDay={2} kicktipp="4-6" />
-          <MappingRow wmDay={3} kicktipp="7-10" />
-        </div>
-        <button className="archive-row" type="button">
-          <IconArchive size={25} stroke={2.1} />
-          <span>Archivierte Saisons</span>
-          <IconChevronRight size={24} stroke={2.3} />
+
+        <button className="explainer-button" type="button" onClick={() => setIsMappingOpen(true)}>
+          <IconInfoCircle size={19} stroke={2.2} />
+          <span>Wie funktioniert die Zuordnung?</span>
         </button>
-      </aside>
+
+        {isMappingOpen && createPortal(<MappingDialog onClose={() => setIsMappingOpen(false)} />, document.body)}
+      </section>
     </div>
   );
 }
 
-function MappingRow({ wmDay, kicktipp }: { wmDay: number; kicktipp: string }) {
+function MappingDialog({ onClose }: { onClose: () => void }) {
   return (
-    <div className="mapping-row">
-      <span className="mapping-number">{wmDay}</span>
+    <div className="mapping-dialog-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="mapping-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mapping-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="dialog-header">
+          <div className="title-group">
+            <IconCalendarWeek className="section-icon" size={22} stroke={2.2} />
+            <h2 id="mapping-dialog-title">Zuordnung</h2>
+          </div>
+          <button className="dialog-close" type="button" aria-label="Hinweis schliessen" onClick={onClose}>
+            <IconX size={20} stroke={2.4} />
+          </button>
+        </div>
+        <p>
+          Die Gruppenphase kommt aus Kicktipp in zehn Bloecken. Die App fasst sie automatisch zu den echten
+          WM-Gruppenspieltagen zusammen.
+        </p>
+        <div className="mapping-list">
+          <MappingRow label="1" title="WM Spieltag 1" detail="Kicktipp 1-3" />
+          <MappingRow label="2" title="WM Spieltag 2" detail="Kicktipp 4-6" tone="red" />
+          <MappingRow label="3" title="WM Spieltag 3" detail="Kicktipp 7-10" />
+          <MappingRow label="KO" title="K.o.-Runden" detail="AF, VF, HF und Finale separat" tone="dark" />
+        </div>
+        <p className="dialog-note">Gesamt = ST1 + ST2 + ST3 + AF + VF + HF + F.</p>
+      </section>
+    </div>
+  );
+}
+
+function MappingRow({
+  label,
+  title,
+  detail,
+  tone = "gold",
+}: {
+  label: string;
+  title: string;
+  detail: string;
+  tone?: "gold" | "red" | "dark";
+}) {
+  return (
+    <div className={`mapping-row ${tone}`}>
+      <span className="mapping-number">{label}</span>
       <div>
-        <strong>WM Spieltag {wmDay}</strong>
-        <span>Kicktipp {kicktipp}</span>
+        <strong>{title}</strong>
+        <span>{detail}</span>
       </div>
-      <span className="arrow-icon" aria-hidden="true">
-        <IconChevronRight size={20} stroke={2.4} />
-      </span>
     </div>
   );
 }
@@ -401,9 +433,9 @@ function AdminPanel({
           <thead>
             <tr>
               <th>Spieler</th>
-              {kicktippDays.map((day) => (
-                <th className="numeric" key={day}>
-                  KT {day}
+              {POINT_ROUNDS.map((round) => (
+                <th className="numeric" key={round.key}>
+                  {round.label}
                 </th>
               ))}
               <th className="numeric">Gesamt</th>
@@ -411,7 +443,7 @@ function AdminPanel({
           </thead>
           <tbody>
             {draft.players.map((player) => {
-              const total = kicktippDays.reduce((sum, day) => sum + Number(player.points[day] ?? 0), 0);
+              const total = POINT_ROUNDS.reduce((sum, round) => sum + Number(player.points[round.key] ?? 0), 0);
               return (
                 <tr key={player.id}>
                   <td>
@@ -420,17 +452,17 @@ function AdminPanel({
                       onChange={(event) => updatePlayer(player.id, (item) => ({ ...item, name: event.target.value }))}
                     />
                   </td>
-                  {kicktippDays.map((day) => (
-                    <td key={day}>
+                  {POINT_ROUNDS.map((round) => (
+                    <td key={round.key}>
                       <input
                         className="point-input"
                         type="number"
                         min="0"
-                        value={player.points[day] ?? 0}
+                        value={player.points[round.key] ?? 0}
                         onChange={(event) =>
                           updatePlayer(player.id, (item) => ({
                             ...item,
-                            points: { ...item.points, [day]: Number(event.target.value) },
+                            points: { ...item.points, [round.key]: Number(event.target.value) },
                           }))
                         }
                       />
