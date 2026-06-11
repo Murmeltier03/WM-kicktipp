@@ -27,10 +27,11 @@ export function clearStoredPassword() {
 }
 
 export async function loginAdmin(password: string): Promise<void> {
+  const normalizedPassword = password.trim();
   const response = await fetch("/api/admin-login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password: password.trim() }),
+    body: JSON.stringify({ password: normalizedPassword }),
   });
 
   if (!response.ok) {
@@ -38,7 +39,7 @@ export async function loginAdmin(password: string): Promise<void> {
     throw new Error(message);
   }
 
-  sessionStorage.setItem(passwordKey, password);
+  sessionStorage.setItem(passwordKey, normalizedPassword);
 }
 
 export async function loadAdminState(): Promise<TournamentState> {

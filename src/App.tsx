@@ -341,13 +341,44 @@ function AdminPanel({
   onSaved: (state: TournamentState) => void;
 }) {
   const [password, setPassword] = useState(getStoredPassword());
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(getStoredPassword()));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(getStoredPassword()));
   const [draft, setDraft] = useState(publicState);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    if (!getStoredPassword()) {
+      setIsCheckingSession(false);
+      return;
+    }
+
+    let isCancelled = false;
+    loadAdminState()
+      .then((adminState) => {
+        if (isCancelled) return;
+        setDraft(adminState);
+        setIsLoggedIn(true);
+      })
+      .catch((error) => {
+        if (isCancelled) return;
+        clearStoredPassword();
+        setPassword("");
+        setIsLoggedIn(false);
+        setMessage(error instanceof Error ? error.message : "Login fehlgeschlagen.");
+      })
+      .finally(() => {
+        if (!isCancelled) setIsCheckingSession(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsCheckingSession(false);
     setMessage("");
     try {
       await loginAdmin(password);
@@ -357,6 +388,7 @@ function AdminPanel({
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Login fehlgeschlagen.");
       clearStoredPassword();
+      setPassword("");
       setIsLoggedIn(false);
     }
   }
@@ -388,6 +420,18 @@ function AdminPanel({
       tournament: { ...current.tournament, playerCount: safeCount },
       players: resizePlayers(current.players, safeCount),
     }));
+  }
+
+  if (isCheckingSession) {
+    return (
+      <section className="panel admin-login">
+        <div className="section-title">
+          <h2>Admin-Login</h2>
+          <span>Pruefe Sitzung</span>
+        </div>
+        <div className="notice">Admin-Daten werden geladen...</div>
+      </section>
+    );
   }
 
   if (!isLoggedIn) {

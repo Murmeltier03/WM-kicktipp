@@ -1,5 +1,5 @@
 function isValidPassword(password: unknown) {
-  const configuredPassword = process.env.ADMIN_PASSWORD ?? "";
+  const configuredPassword = process.env.ADMIN_PASSWORD?.trim() ?? "";
   return (
     typeof password === "string" &&
     password.trim().length > 0 &&
@@ -18,7 +18,7 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: "ADMIN_PASSWORD is not configured" });
   }
 
-  const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body;
+  const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body ?? {};
 
   if (!isValidPassword(body?.password)) {
     return res.status(401).json({ error: "Unauthorized" });

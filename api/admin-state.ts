@@ -22,9 +22,19 @@ type DbPointEntry = {
   points: number;
 };
 
+function readHeaderValue(value: string | string[] | undefined) {
+  const firstValue = Array.isArray(value) ? value[0] : value;
+  return typeof firstValue === "string" ? firstValue.trim() : "";
+}
+
+function safePoints(value: unknown) {
+  const points = Number(value ?? 0);
+  return Number.isFinite(points) ? Math.max(0, Math.round(points)) : 0;
+}
+
 function assertAdmin(req: any, res: any) {
-  const configuredPassword = process.env.ADMIN_PASSWORD;
-  const providedPassword = req.headers["x-admin-password"];
+  const configuredPassword = process.env.ADMIN_PASSWORD?.trim();
+  const providedPassword = readHeaderValue(req.headers["x-admin-password"]);
 
   if (!configuredPassword) {
     res.status(500).json({ error: "ADMIN_PASSWORD is not configured" });
@@ -47,6 +57,10 @@ function adminClient() {
     throw new Error("Supabase admin environment is not configured");
   }
 
+  if (serviceRoleKey.startsWith("sb_publishable_") || serviceRoleKey.startsWith("anon")) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY must be the secret/service-role key, not the publishable anon key");
+  }
+
   return createClient(url, serviceRoleKey);
 }
 
@@ -62,11 +76,11 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function normalizePlayers(players: Player[]) {
+function normalizePlayers(players: Player[] = []) {
   return players.map((player) => ({
     ...player,
     id: isUuid(player.id) ? player.id : randomUUID(),
-    name: player.name.trim() || "Unbenannt",
+    name: (player.name ?? "").trim() || "Unbenannt",
   }));
 }
 
@@ -126,7 +140,7 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
   const players = normalizePlayers(body.players);
   const tournament = {
     slug: "wm-2026",
-    name: body.tournament.name.trim() || "WM 2026",
+    name: body.tournament?.name?.trim() || "WM 2026",
     player_count: players.length,
   };
 
@@ -158,7 +172,7 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
         tournament_slug: tournament.slug,
         player_id: player.id,
         kicktipp_matchday: round.key,
-        points: Math.max(0, Number(player.points[round.key] ?? 0)),
+        points: safePoints(player.points?.[round.key]),
       })),
     );
 

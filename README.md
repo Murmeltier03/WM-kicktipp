@@ -10,7 +10,7 @@ Kleine React/Vite-App fuer eine WM-2026-Kicktipp-Runde.
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
    - `ADMIN_PASSWORD`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (secret/service-role key, nicht der `sb_publishable_...` Key)
 4. Lokal starten:
 
 ```bash
