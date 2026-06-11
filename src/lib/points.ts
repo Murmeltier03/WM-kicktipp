@@ -83,21 +83,25 @@ export function calculateLeaderboard(players: Player[]): LeaderboardRow[] {
     });
   });
 
-  for (let index = 0; index < rankedRows.length; ) {
-    const sameScoreRows = rankedRows.filter((row) => row.total === rankedRows[index].total);
-    const firstPosition = index + 1;
-    const placementPrize = sameScoreRows.reduce((sum, _row, offset) => {
-      return sum + (CASH_PRIZES.placements[firstPosition + offset] ?? 0);
-    }, 0);
+  const finalRoundHasPoints = rankedRows.some((row) => Number(row.points[14] ?? 0) > 0);
 
-    if (placementPrize > 0) {
-      const prizeShare = placementPrize / sameScoreRows.length;
-      sameScoreRows.forEach((row) => {
-        row.cash.placement += prizeShare;
-      });
+  if (finalRoundHasPoints) {
+    for (let index = 0; index < rankedRows.length; ) {
+      const sameScoreRows = rankedRows.filter((row) => row.total === rankedRows[index].total);
+      const firstPosition = index + 1;
+      const placementPrize = sameScoreRows.reduce((sum, _row, offset) => {
+        return sum + (CASH_PRIZES.placements[firstPosition + offset] ?? 0);
+      }, 0);
+
+      if (placementPrize > 0) {
+        const prizeShare = placementPrize / sameScoreRows.length;
+        sameScoreRows.forEach((row) => {
+          row.cash.placement += prizeShare;
+        });
+      }
+
+      index += sameScoreRows.length;
     }
-
-    index += sameScoreRows.length;
   }
 
   return rankedRows.map((row) => ({
