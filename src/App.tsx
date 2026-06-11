@@ -79,7 +79,7 @@ function App() {
           </div>
           <div className="status-strip" aria-label="Datenstatus">
             <span className={isSupabaseConfigured ? "status-dot live" : "status-dot demo"} />
-            Stand: 11.06.2026, 11:24 Uhr
+            Stand: 11.06.2026
           </div>
         </section>
 
