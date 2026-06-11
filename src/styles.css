@@ -153,9 +153,9 @@ button {
 
 .page-heading {
   position: relative;
-  min-height: 284px;
+  min-height: 246px;
   margin: 0;
-  padding: 48px 30px 62px;
+  padding: 64px 30px 58px;
   overflow: hidden;
   color: #ffffff;
   background:
@@ -195,7 +195,7 @@ button {
 }
 
 .page-heading h1 {
-  margin: 0 0 14px;
+  margin: 0;
   color: #ffffff;
   font-size: clamp(32px, 8.8vw, 45px);
   line-height: 0.98;
@@ -294,9 +294,9 @@ button {
 .leaderboard-head,
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 46px;
+  grid-template-columns: 36px minmax(0, 1fr) 48px 82px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .leaderboard-head {
@@ -311,7 +311,8 @@ button {
   text-align: left;
 }
 
-.leaderboard-head span:nth-child(3) {
+.leaderboard-head span:nth-child(3),
+.leaderboard-head span:nth-child(4) {
   text-align: right;
 }
 
@@ -321,8 +322,8 @@ button {
 }
 
 .leaderboard-row {
-  min-height: 50px;
-  padding: 5px 6px;
+  min-height: 44px;
+  padding: 6px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -331,10 +332,8 @@ button {
 .rank-badge {
   display: inline-grid;
   place-items: center;
-  align-self: start;
   width: 24px;
   height: 24px;
-  margin-top: 1px;
   color: #08090a;
   background: linear-gradient(135deg, #ffe681, #ffc93c);
   border-radius: 7px;
@@ -349,12 +348,6 @@ button {
 
 .leaderboard-row:nth-child(3) .rank-badge {
   background: linear-gradient(135deg, #ffc45a, #e38a16);
-}
-
-.player-score {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
 }
 
 .player-name {
@@ -396,13 +389,85 @@ button {
   font-weight: 760;
 }
 
-.total-score {
-  align-self: start;
+.points-score,
+.cash-score {
   justify-self: end;
-  margin-top: -1px;
+  white-space: nowrap;
+}
+
+.points-score {
+  color: #26313e;
+  font-size: clamp(15px, 4vw, 19px);
+  font-weight: 850;
+}
+
+.cash-score {
   color: var(--green);
-  font-size: clamp(16px, 4.4vw, 21px);
+  font-size: clamp(14px, 3.8vw, 18px);
   font-weight: 1000;
+}
+
+.cash-prizes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.cash-prizes span {
+  min-width: 0;
+  padding: 7px 8px;
+  overflow: hidden;
+  color: #344150;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.point-details {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.detail-title {
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.detail-list {
+  display: grid;
+  gap: 5px;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: minmax(68px, 0.7fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 8px;
+  background: #fbfcfe;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.detail-name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .explainer-button {
@@ -783,17 +848,13 @@ input:focus {
   }
 
   .page-heading {
-    min-height: 284px;
-    padding: 48px 30px 62px;
+    min-height: 246px;
+    padding: 64px 30px 58px;
   }
 
   .page-heading::before {
     background-position: left center;
     background-size: auto 100%;
-  }
-
-  .page-heading h1 {
-    margin-bottom: 16px;
   }
 
   .status-strip {
@@ -803,8 +864,8 @@ input:focus {
 
   .leaderboard-head,
   .leaderboard-row {
-    grid-template-columns: 26px minmax(0, 1fr) 44px;
-    gap: 7px;
+    grid-template-columns: 34px minmax(0, 1fr) 44px 76px;
+    gap: 6px;
   }
 
   .leaderboard-head {
@@ -812,8 +873,8 @@ input:focus {
   }
 
   .leaderboard-row {
-    min-height: 50px;
-    padding: 5px 6px;
+    min-height: 44px;
+    padding: 6px;
   }
 
   .rank-badge {
@@ -841,7 +902,7 @@ input:focus {
 
   .leaderboard-head,
   .leaderboard-row {
-    grid-template-columns: 24px minmax(0, 1fr) 40px;
+    grid-template-columns: 32px minmax(0, 1fr) 40px 72px;
     gap: 5px;
   }
 
@@ -859,10 +920,6 @@ input:focus {
     font-size: 14px;
   }
 
-  .round-breakdown {
-    gap: 2px;
-  }
-
   .round-item em {
     font-size: 8px;
   }
@@ -875,6 +932,16 @@ input:focus {
     padding-right: 10px;
     padding-left: 10px;
   }
+
+  .cash-prizes {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-row {
+    grid-template-columns: minmax(58px, 0.65fr) minmax(0, 2fr);
+    padding-right: 6px;
+    padding-left: 6px;
+  }
 }
 
 @media (min-width: 760px) {
@@ -883,7 +950,7 @@ input:focus {
   }
 
   .page-heading {
-    min-height: 600px;
+    min-height: 480px;
     padding-left: 30px;
   }
 

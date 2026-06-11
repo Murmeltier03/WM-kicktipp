@@ -28,3 +28,16 @@ Kicktipp teilt die Gruppenphase in 10 Spieltage. Die App aggregiert diese zu den
 - K.o.-Runden: Achtelfinale, Viertelfinale, Halbfinale und Finale werden separat eingetragen
 
 Im Admin-Bereich werden die Punkte pro Kicktipp-Spieltag und K.o.-Runde eingegeben. Die Tabelle berechnet daraus automatisch Gesamtpunkte, WM-Spieltage und K.o.-Summen.
+
+## Cash-out
+
+Die App berechnet den aktuellen Cash-out aus Gesamtpunkten und Spieltagssiegen:
+
+- WM Spieltag 1: 17,50 EUR
+- WM Spieltag 2: 17,50 EUR
+- WM Spieltag 3: 17,50 EUR
+- Platz 1: 42,50 EUR
+- Platz 2: 27,50 EUR
+- Platz 3: 12,50 EUR
+
+Bei Punktgleichstand wird der jeweilige Preis geteilt.

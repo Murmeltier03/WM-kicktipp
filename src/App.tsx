@@ -10,11 +10,30 @@ import {
 } from "@tabler/icons-react";
 import { kicktippGroups } from "./data/schedule";
 import { clearStoredPassword, getStoredPassword, loadAdminState, loginAdmin, saveAdminState } from "./lib/adminApi";
-import { KNOCKOUT_ROUNDS, POINT_ROUNDS, calculateLeaderboard, resizePlayers } from "./lib/points";
+import { CASH_PRIZES, KNOCKOUT_ROUNDS, POINT_ROUNDS, calculateLeaderboard, resizePlayers } from "./lib/points";
 import { isSupabaseConfigured, loadPublicState } from "./lib/supabase";
-import type { Player, TournamentState } from "./types";
+import type { LeaderboardRow, Player, TournamentState } from "./types";
 
 const wmDays = [1, 2, 3] as const;
+const euroFormatter = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+});
+
+function formatEuro(value: number) {
+  return euroFormatter.format(value);
+}
+
+function getScoreBreakdown(row: LeaderboardRow) {
+  return [
+    ...wmDays.map((day) => ({ label: `ST${day}`, value: row.wmPoints[day] })),
+    ...KNOCKOUT_ROUNDS.map((round) => ({
+      label: round.label,
+      value: row.knockoutPoints[round.label],
+    })),
+  ];
+}
 
 function App() {
   const [activeView, setActiveView] = useState<"table" | "schedule" | "admin">("table");
@@ -72,10 +91,6 @@ function App() {
           <div className="flag-glow" aria-hidden="true" />
           <div>
             <h1>{state?.tournament.name ?? "WM 2026"}</h1>
-            <p>
-              Punkteuebersicht der Kicktipp-Runde. Kicktipp-Spieltag 1-3, 4-6 und 7-10 werden automatisch
-              zu den echten WM-Gruppenspieltagen zusammengefasst.
-            </p>
           </div>
           <div className="status-strip" aria-label="Datenstatus">
             <span className={isSupabaseConfigured ? "status-dot live" : "status-dot demo"} />
@@ -140,43 +155,55 @@ function Leaderboard({ rows }: { rows: ReturnType<typeof calculateLeaderboard> }
         <div className="section-title">
           <div className="title-group">
             <IconTrophy className="section-icon" size={22} stroke={2.2} />
-            <h2>Tabelle</h2>
+            <h2>Cash-out</h2>
           </div>
           <span>{rows.length} Spieler</span>
         </div>
         <div className="leaderboard-head" aria-hidden="true">
           <span>Rang</span>
           <span>Spieler</span>
-          <span>Gesamt</span>
+          <span>Punkte</span>
+          <span>Gewinn</span>
         </div>
         <div className="leaderboard-list">
-          {rows.map((row) => {
-            const scores = [
-              ...wmDays.map((day) => ({ label: `ST${day}`, value: row.wmPoints[day] })),
-              ...KNOCKOUT_ROUNDS.map((round) => ({
-                label: round.label,
-                value: row.knockoutPoints[round.label],
-              })),
-            ];
+          {rows.map((row) => (
+            <article className="leaderboard-row" key={row.id}>
+              <div className="rank-badge">{row.rank}</div>
+              <span className="player-name">{row.name}</span>
+              <strong className="points-score">{row.total}</strong>
+              <strong className="cash-score">{formatEuro(row.cash.total)}</strong>
+            </article>
+          ))}
+        </div>
 
-            return (
-              <article className="leaderboard-row" key={row.id}>
-                <div className="rank-badge">{row.rank}</div>
-                <div className="player-score">
-                  <span className="player-name">{row.name}</span>
-                  <div className="round-breakdown" aria-label={`Punkte von ${row.name}`}>
-                    {scores.map((score) => (
-                      <span className="round-item" key={score.label}>
-                        <em>{score.label}</em>
-                        <strong>{score.value}</strong>
-                      </span>
-                    ))}
-                  </div>
+        <div className="cash-prizes" aria-label="Cash-out System">
+          <span>Spieltag 1 {formatEuro(CASH_PRIZES.matchdays[1])}</span>
+          <span>Spieltag 2 {formatEuro(CASH_PRIZES.matchdays[2])}</span>
+          <span>Spieltag 3 {formatEuro(CASH_PRIZES.matchdays[3])}</span>
+          <span>Platz 1 {formatEuro(CASH_PRIZES.placements[1])}</span>
+          <span>Platz 2 {formatEuro(CASH_PRIZES.placements[2])}</span>
+          <span>Platz 3 {formatEuro(CASH_PRIZES.placements[3])}</span>
+        </div>
+
+        <div className="point-details">
+          <div className="detail-title">
+            <span>Punktdetails</span>
+          </div>
+          <div className="detail-list">
+            {rows.map((row) => (
+              <article className="detail-row" key={`${row.id}-details`}>
+                <span className="detail-name">{row.name}</span>
+                <div className="round-breakdown" aria-label={`Punktdetails von ${row.name}`}>
+                  {getScoreBreakdown(row).map((score) => (
+                    <span className="round-item" key={score.label}>
+                      <em>{score.label}</em>
+                      <strong>{score.value}</strong>
+                    </span>
+                  ))}
                 </div>
-                <strong className="total-score">{row.total}</strong>
               </article>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
         <button className="explainer-button" type="button" onClick={() => setIsMappingOpen(true)}>
