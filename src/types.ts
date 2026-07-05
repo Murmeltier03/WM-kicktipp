@@ -27,7 +27,7 @@ export type TournamentState = {
 export type LeaderboardRow = Player & {
   total: number;
   wmPoints: Record<1 | 2 | 3, number>;
-  knockoutPoints: Record<"AF" | "VF" | "HF" | "F", number>;
+  knockoutPoints: Record<"16F" | "AF" | "VF" | "HF" | "F", number>;
   cash: {
     matchdays: Record<1 | 2 | 3, number>;
     placement: number;

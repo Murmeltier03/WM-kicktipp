@@ -5,10 +5,11 @@ export const KICKTIPP_DAYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 export const WM_DAYS = [1, 2, 3] as const;
 
 export const KNOCKOUT_ROUNDS = [
-  { key: 11, label: "AF", name: "Achtel" },
-  { key: 12, label: "VF", name: "Viertel" },
-  { key: 13, label: "HF", name: "Halb" },
-  { key: 14, label: "F", name: "Finale" },
+  { key: 11, label: "16F", name: "16. Finale" },
+  { key: 12, label: "AF", name: "Achtel" },
+  { key: 13, label: "VF", name: "Viertel" },
+  { key: 14, label: "HF", name: "Halb" },
+  { key: 15, label: "F", name: "Finale" },
 ] as const;
 
 export const POINT_ROUNDS = [
@@ -36,7 +37,7 @@ export function emptyPoints(): Record<string, number> {
 export function calculateLeaderboard(players: Player[]): LeaderboardRow[] {
   const rows = players.map((player) => {
     const wmPoints = { 1: 0, 2: 0, 3: 0 } as Record<1 | 2 | 3, number>;
-    const knockoutPoints = { AF: 0, VF: 0, HF: 0, F: 0 } as LeaderboardRow["knockoutPoints"];
+    const knockoutPoints = { "16F": 0, AF: 0, VF: 0, HF: 0, F: 0 } as LeaderboardRow["knockoutPoints"];
     let total = 0;
 
     KICKTIPP_DAYS.forEach((day) => {
@@ -83,7 +84,8 @@ export function calculateLeaderboard(players: Player[]): LeaderboardRow[] {
     });
   });
 
-  const finalRoundHasPoints = rankedRows.some((row) => Number(row.points[14] ?? 0) > 0);
+  const finalRound = KNOCKOUT_ROUNDS[KNOCKOUT_ROUNDS.length - 1];
+  const finalRoundHasPoints = rankedRows.some((row) => Number(row.points[finalRound.key] ?? 0) > 0);
 
   if (finalRoundHasPoints) {
     for (let index = 0; index < rankedRows.length; ) {

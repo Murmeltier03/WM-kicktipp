@@ -244,9 +244,9 @@ function MappingDialog({ onClose }: { onClose: () => void }) {
           <MappingRow label="1" title="WM Spieltag 1" detail="Kicktipp 1-3" />
           <MappingRow label="2" title="WM Spieltag 2" detail="Kicktipp 4-6" tone="red" />
           <MappingRow label="3" title="WM Spieltag 3" detail="Kicktipp 7-10" />
-          <MappingRow label="KO" title="K.o.-Runden" detail="AF, VF, HF und Finale separat" tone="dark" />
+          <MappingRow label="KO" title="K.o.-Runden" detail="16F, AF, VF, HF und Finale separat" tone="dark" />
         </div>
-        <p className="dialog-note">Gesamt = ST1 + ST2 + ST3 + AF + VF + HF + F.</p>
+        <p className="dialog-note">Gesamt = ST1 + ST2 + ST3 + 16F + AF + VF + HF + F.</p>
       </section>
     </div>
   );
