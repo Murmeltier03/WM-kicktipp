@@ -20,9 +20,22 @@ const euroFormatter = new Intl.NumberFormat("de-DE", {
   currency: "EUR",
   minimumFractionDigits: 2,
 });
+const dateFormatter = new Intl.DateTimeFormat("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Europe/Berlin",
+});
 
 function formatEuro(value: number) {
   return euroFormatter.format(value);
+}
+
+function formatStandDate(value: string | undefined) {
+  if (!value) return "unbekannt";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "unbekannt";
+  return dateFormatter.format(date);
 }
 
 function getScoreBreakdown(row: LeaderboardRow) {
@@ -94,7 +107,7 @@ function App() {
           </div>
           <div className="status-strip" aria-label="Datenstatus">
             <span className={isSupabaseConfigured ? "status-dot live" : "status-dot demo"} />
-            Stand: 11.06.2026
+            Stand: {formatStandDate(state?.tournament.updatedAt)}
           </div>
         </section>
 

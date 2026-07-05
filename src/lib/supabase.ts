@@ -14,6 +14,7 @@ type DbTournament = {
   slug: string;
   name: string;
   player_count: number;
+  updated_at: string;
 };
 
 type DbPlayer = {
@@ -33,7 +34,7 @@ export async function loadPublicState(): Promise<TournamentState> {
 
   const { data: tournament, error: tournamentError } = await supabase
     .from("tournaments")
-    .select("slug,name,player_count")
+    .select("slug,name,player_count,updated_at")
     .eq("slug", "wm-2026")
     .maybeSingle<DbTournament>();
 
@@ -60,6 +61,7 @@ export async function loadPublicState(): Promise<TournamentState> {
       slug: tournament.slug,
       name: tournament.name,
       playerCount: tournament.player_count,
+      updatedAt: tournament.updated_at,
     },
     players: players.map((player) => {
       const points = emptyPoints();

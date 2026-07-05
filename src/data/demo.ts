@@ -8,6 +8,7 @@ export const demoState: TournamentState = {
     slug: "wm-2026",
     name: "WM 2026",
     playerCount: names.length,
+    updatedAt: new Date().toISOString(),
   },
   players: names.map((name, index) => ({
     id: `demo-${index + 1}`,

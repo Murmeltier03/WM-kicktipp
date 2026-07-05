@@ -20,6 +20,7 @@ export type TournamentState = {
     slug: string;
     name: string;
     playerCount: number;
+    updatedAt: string;
   };
   players: Player[];
 };

@@ -2,6 +2,7 @@ type DbTournament = {
   slug: string;
   name: string;
   player_count: number;
+  updated_at: string;
 };
 
 type DbPlayer = {
@@ -27,6 +28,7 @@ type TournamentState = {
     slug: string;
     name: string;
     playerCount: number;
+    updatedAt: string;
   };
   players: Player[];
 };
@@ -113,7 +115,7 @@ async function loadState(): Promise<TournamentState> {
   const supabase = await adminClient();
   const { data: tournament, error: tournamentError } = await supabase
     .from("tournaments")
-    .select("slug,name,player_count")
+    .select("slug,name,player_count,updated_at")
     .eq("slug", "wm-2026")
     .maybeSingle<DbTournament>();
 
@@ -124,6 +126,7 @@ async function loadState(): Promise<TournamentState> {
         slug: "wm-2026",
         name: "WM 2026",
         playerCount: 0,
+        updatedAt: new Date().toISOString(),
       },
       players: [],
     };
@@ -151,6 +154,7 @@ async function loadState(): Promise<TournamentState> {
       slug: tournament.slug,
       name: tournament.name,
       playerCount: tournament.player_count,
+      updatedAt: tournament.updated_at,
     },
     players: (players ?? []).map((player) => {
       const points = emptyPoints();
@@ -172,10 +176,12 @@ async function loadState(): Promise<TournamentState> {
 async function saveState(body: TournamentState): Promise<TournamentState> {
   const supabase = await adminClient();
   const players = normalizePlayers(Array.isArray(body.players) ? body.players : []);
+  const updatedAt = new Date().toISOString();
   const tournament = {
     slug: "wm-2026",
     name: body.tournament?.name?.trim() || "WM 2026",
     player_count: players.length,
+    updated_at: updatedAt,
   };
 
   const { error: tournamentError } = await supabase.from("tournaments").upsert(tournament, { onConflict: "slug" });
@@ -219,6 +225,7 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
       slug: tournament.slug,
       name: tournament.name,
       playerCount: players.length,
+      updatedAt,
     },
     players,
   };
