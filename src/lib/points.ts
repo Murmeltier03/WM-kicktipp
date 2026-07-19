@@ -68,10 +68,14 @@ export function calculateLeaderboard(players: Player[]): LeaderboardRow[] {
 
   rows.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "de"));
 
-  const rankedRows = rows.map((row, index, sorted) => ({
-    ...row,
-    rank: index > 0 && sorted[index - 1].total === row.total ? sorted[index - 1].rank : index + 1,
-  }));
+  const rankedRows = rows.reduce<LeaderboardRow[]>((ranked, row, index) => {
+    const previous = ranked[index - 1];
+    ranked.push({
+      ...row,
+      rank: previous && previous.total === row.total ? previous.rank : index + 1,
+    });
+    return ranked;
+  }, []);
 
   WM_DAYS.forEach((day) => {
     const bestScore = Math.max(0, ...rankedRows.map((row) => row.wmPoints[day]));

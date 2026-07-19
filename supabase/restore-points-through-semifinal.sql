@@ -1,8 +1,7 @@
 begin;
 
--- Restore the points shown in the Kicktipp screenshots for matchdays 1-10
--- and all knockout rounds through the semifinal. The final (round 15) is
--- intentionally left untouched.
+-- Restore all confirmed Kicktipp points for matchdays 1-10 and every
+-- knockout round, including the final (round 15).
 
 alter table public.point_entries
 drop constraint if exists point_entries_kicktipp_matchday_check;
@@ -54,6 +53,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Gero', 12, 11),
     ('Gero', 13, 9),
     ('Gero', 14, 2),
+    ('Gero', 15, 2),
 
     -- Quy = Kimi
     ('Quy', 1, 10),
@@ -70,6 +70,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Quy', 12, 14),
     ('Quy', 13, 11),
     ('Quy', 14, 2),
+    ('Quy', 15, 2),
 
     ('Robin', 1, 6),
     ('Robin', 2, 4),
@@ -85,6 +86,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Robin', 12, 13),
     ('Robin', 13, 7),
     ('Robin', 14, 2),
+    ('Robin', 15, 4),
 
     -- Denis = SexySch...
     ('Denis', 1, 7),
@@ -101,6 +103,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Denis', 12, 12),
     ('Denis', 13, 11),
     ('Denis', 14, 2),
+    ('Denis', 15, 0),
 
     -- Yannic = Yannios
     ('Yannic', 1, 8),
@@ -117,6 +120,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Yannic', 12, 12),
     ('Yannic', 13, 5),
     ('Yannic', 14, 3),
+    ('Yannic', 15, 2),
 
     -- Anka = Anker
     ('Anka', 1, 5),
@@ -133,6 +137,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Anka', 12, 12),
     ('Anka', 13, 9),
     ('Anka', 14, 4),
+    ('Anka', 15, 2),
 
     -- Yannick = Murmeltier
     ('Yannick', 1, 7),
@@ -149,6 +154,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Yannick', 12, 15),
     ('Yannick', 13, 6),
     ('Yannick', 14, 3),
+    ('Yannick', 15, 2),
 
     -- Marius = mariuz
     ('Marius', 1, 9),
@@ -165,6 +171,7 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Marius', 12, 12),
     ('Marius', 13, 10),
     ('Marius', 14, 0),
+    ('Marius', 15, 2),
 
     ('Moritz', 1, 6),
     ('Moritz', 2, 6),
@@ -179,7 +186,8 @@ with input_points (display_name, kicktipp_matchday, points) as (
     ('Moritz', 11, 31),
     ('Moritz', 12, 10),
     ('Moritz', 13, 9),
-    ('Moritz', 14, 0)
+    ('Moritz', 14, 0),
+    ('Moritz', 15, 0)
 )
 insert into public.point_entries (
   tournament_slug,
@@ -214,7 +222,7 @@ begin
   from public.point_entries as entry
   join public.players as player on player.id = entry.player_id
   where entry.tournament_slug = 'wm-2026'
-    and entry.kicktipp_matchday between 1 and 14
+    and entry.kicktipp_matchday between 1 and 15
     and player.display_name in (
       'Gero',
       'Quy',
@@ -227,12 +235,12 @@ begin
       'Moritz'
     );
 
-  if restored_rows <> 126 then
-    raise exception 'Expected 126 restored point rows, found %', restored_rows;
+  if restored_rows <> 135 then
+    raise exception 'Expected 135 restored point rows, found %', restored_rows;
   end if;
 
-  if restored_points <> 1332 then
-    raise exception 'Expected 1332 restored points, found %', restored_points;
+  if restored_points <> 1348 then
+    raise exception 'Expected 1348 restored points, found %', restored_points;
   end if;
 end
 $$;

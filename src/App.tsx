@@ -442,7 +442,7 @@ function AdminPanel({
 
   async function handleRestorePoints() {
     const confirmed = window.confirm(
-      "Die bestätigten Kicktipp-Punkte bis einschließlich Halbfinale jetzt einmalig eintragen?",
+      "Alle bestätigten Kicktipp-Punkte einschließlich Finale jetzt eintragen und die Endauswertung aktivieren?",
     );
     if (!confirmed) return;
 
@@ -537,11 +537,11 @@ function AdminPanel({
           <strong>Einmalige Punkte-Wiederherstellung</strong>
           <p>
             {restoreStatus?.status === "complete"
-              ? `${restoreStatus.rowCount} Einträge mit ${restoreStatus.totalPoints} Punkten sind vollständig gespeichert.`
+              ? `${restoreStatus.rowCount} Einträge mit ${restoreStatus.totalPoints} Punkten sind vollständig gespeichert. Die Endauswertung ist aktiv.`
               : restoreStatus?.status === "blocked"
                 ? "Es sind bereits abweichende Punkte vorhanden. Automatisches Überschreiben ist gesperrt."
                 : restoreStatus?.status === "ready"
-                  ? "Trägt alle 126 bestätigten Werte bis einschließlich Halbfinale sicher in Supabase ein."
+                  ? `Trägt alle ${restoreStatus.expectedRows} bestätigten Werte einschließlich Finale ein und aktiviert die Endauswertung.`
                   : "Wiederherstellungsstatus wird geprüft..."}
           </p>
         </div>
@@ -554,8 +554,8 @@ function AdminPanel({
           {isRestoring
             ? "Wird eingetragen..."
             : restoreStatus?.status === "complete"
-              ? "Bereits wiederhergestellt"
-              : "Punkte jetzt eintragen"}
+              ? "Endauswertung vollständig"
+              : "Finale & Endauswertung eintragen"}
         </button>
       </div>
 
