@@ -745,6 +745,43 @@ input:focus {
   margin-bottom: 18px;
 }
 
+.restore-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px;
+  background: #fff9e6;
+  border: 1px solid #f2d77b;
+  border-radius: 8px;
+}
+
+.restore-card.complete {
+  background: #edf8f2;
+  border-color: #a9d8bd;
+}
+
+.restore-card.blocked {
+  background: #fff1f0;
+  border-color: #f4b4ae;
+}
+
+.restore-card strong {
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.restore-card p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.restore-card .primary-button {
+  width: 100%;
+}
+
 .admin-table {
   min-width: 1110px;
 }

@@ -9,7 +9,16 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { kicktippGroups } from "./data/schedule";
-import { clearStoredPassword, getStoredPassword, loadAdminState, loginAdmin, saveAdminState } from "./lib/adminApi";
+import {
+  clearStoredPassword,
+  getStoredPassword,
+  loadAdminState,
+  loadPointRestoreStatus,
+  loginAdmin,
+  restoreTournamentPoints,
+  saveAdminState,
+} from "./lib/adminApi";
+import type { PointRestoreStatus } from "./lib/adminApi";
 import { CASH_PRIZES, KNOCKOUT_ROUNDS, POINT_ROUNDS, calculateLeaderboard, resizePlayers } from "./lib/points";
 import { isSupabaseConfigured, loadPublicState } from "./lib/supabase";
 import type { LeaderboardRow, Player, TournamentState } from "./types";
@@ -359,6 +368,16 @@ function AdminPanel({
   const [draft, setDraft] = useState(publicState);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreStatus, setRestoreStatus] = useState<PointRestoreStatus | null>(null);
+
+  async function refreshRestoreStatus() {
+    try {
+      setRestoreStatus(await loadPointRestoreStatus());
+    } catch {
+      setRestoreStatus(null);
+    }
+  }
 
   useEffect(() => {
     if (!getStoredPassword()) {
@@ -372,6 +391,7 @@ function AdminPanel({
         if (isCancelled) return;
         setDraft(adminState);
         setIsLoggedIn(true);
+        void refreshRestoreStatus();
       })
       .catch((error) => {
         if (isCancelled) return;
@@ -398,6 +418,7 @@ function AdminPanel({
       const adminState = await loadAdminState();
       setDraft(adminState);
       setIsLoggedIn(true);
+      void refreshRestoreStatus();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Login fehlgeschlagen.");
       clearStoredPassword();
@@ -416,6 +437,28 @@ function AdminPanel({
       setMessage(error instanceof Error ? error.message : "Speichern fehlgeschlagen.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleRestorePoints() {
+    const confirmed = window.confirm(
+      "Die bestätigten Kicktipp-Punkte bis einschließlich Halbfinale jetzt einmalig eintragen?",
+    );
+    if (!confirmed) return;
+
+    setIsRestoring(true);
+    setMessage("");
+    try {
+      const restored = await restoreTournamentPoints();
+      const adminState = await loadAdminState();
+      setRestoreStatus(restored);
+      setDraft(adminState);
+      onSaved(adminState);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Punkte konnten nicht wiederhergestellt werden.");
+      await refreshRestoreStatus();
+    } finally {
+      setIsRestoring(false);
     }
   }
 
@@ -486,6 +529,33 @@ function AdminPanel({
           }}
         >
           Abmelden
+        </button>
+      </div>
+
+      <div className={`restore-card ${restoreStatus?.status ?? "loading"}`}>
+        <div>
+          <strong>Einmalige Punkte-Wiederherstellung</strong>
+          <p>
+            {restoreStatus?.status === "complete"
+              ? `${restoreStatus.rowCount} Einträge mit ${restoreStatus.totalPoints} Punkten sind vollständig gespeichert.`
+              : restoreStatus?.status === "blocked"
+                ? "Es sind bereits abweichende Punkte vorhanden. Automatisches Überschreiben ist gesperrt."
+                : restoreStatus?.status === "ready"
+                  ? "Trägt alle 126 bestätigten Werte bis einschließlich Halbfinale sicher in Supabase ein."
+                  : "Wiederherstellungsstatus wird geprüft..."}
+          </p>
+        </div>
+        <button
+          className="primary-button"
+          type="button"
+          onClick={handleRestorePoints}
+          disabled={isRestoring || !restoreStatus || restoreStatus.status !== "ready"}
+        >
+          {isRestoring
+            ? "Wird eingetragen..."
+            : restoreStatus?.status === "complete"
+              ? "Bereits wiederhergestellt"
+              : "Punkte jetzt eintragen"}
         </button>
       </div>
 

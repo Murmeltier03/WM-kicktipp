@@ -1,5 +1,13 @@
 import type { TournamentState } from "../types";
 
+export type PointRestoreStatus = {
+  status: "ready" | "complete" | "blocked";
+  rowCount: number;
+  totalPoints: number;
+  expectedRows: number;
+  expectedPoints: number;
+};
+
 const passwordKey = "wm-kicktipp-admin-password";
 
 async function extractApiMessage(response: Response, fallback: string) {
@@ -67,6 +75,33 @@ export async function saveAdminState(state: TournamentState): Promise<Tournament
 
   if (!response.ok) {
     const message = await extractApiMessage(response, "Speichern fehlgeschlagen.");
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+export async function loadPointRestoreStatus(): Promise<PointRestoreStatus> {
+  const response = await fetch("/api/restore-points", {
+    headers: { "x-admin-password": getStoredPassword() },
+  });
+
+  if (!response.ok) {
+    const message = await extractApiMessage(response, "Wiederherstellungsstatus konnte nicht geladen werden.");
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+export async function restoreTournamentPoints(): Promise<PointRestoreStatus> {
+  const response = await fetch("/api/restore-points", {
+    method: "POST",
+    headers: { "x-admin-password": getStoredPassword() },
+  });
+
+  if (!response.ok) {
+    const message = await extractApiMessage(response, "Punkte konnten nicht wiederhergestellt werden.");
     throw new Error(message);
   }
 

@@ -227,9 +227,12 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
     })),
   );
 
+  const hasFinalPoints = players.some((player) => safePoints(player.points?.[15]) > 0);
+  const rowsToSave = hasFinalPoints ? pointRows : pointRows.filter((row) => row.kicktipp_matchday <= 14);
+
   const { error: pointUpsertError } = await supabase
     .from("point_entries")
-    .upsert(pointRows, { onConflict: "player_id,kicktipp_matchday" });
+    .upsert(rowsToSave, { onConflict: "player_id,kicktipp_matchday" });
   if (pointUpsertError) throw pointUpsertError;
 
   const stalePlayerIds = (existingPlayers ?? [])
