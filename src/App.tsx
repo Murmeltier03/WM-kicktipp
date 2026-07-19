@@ -537,11 +537,11 @@ function AdminPanel({
           <strong>Einmalige Punkte-Wiederherstellung</strong>
           <p>
             {restoreStatus?.status === "complete"
-              ? `${restoreStatus.rowCount} Einträge mit ${restoreStatus.totalPoints} Punkten sind vollständig gespeichert. Die Endauswertung ist aktiv.`
+              ? `Die ${restoreStatus.rowCount} Finalwerte sind gespeichert. Die Endauswertung ist aktiv.`
               : restoreStatus?.status === "blocked"
                 ? "Es sind bereits abweichende Punkte vorhanden. Automatisches Überschreiben ist gesperrt."
                 : restoreStatus?.status === "ready"
-                  ? `Trägt alle ${restoreStatus.expectedRows} bestätigten Werte einschließlich Finale ein und aktiviert die Endauswertung.`
+                  ? `Trägt ausschließlich die ${restoreStatus.expectedRows} Werte der letzten Spalte F ein. Alle bisherigen Punkte bleiben unverändert.`
                   : "Wiederherstellungsstatus wird geprüft..."}
           </p>
         </div>
