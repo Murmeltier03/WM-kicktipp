@@ -175,7 +175,20 @@ async function loadState(): Promise<TournamentState> {
 
 async function saveState(body: TournamentState): Promise<TournamentState> {
   const supabase = await adminClient();
-  const players = normalizePlayers(Array.isArray(body.players) ? body.players : []);
+  if (!Array.isArray(body.players) || body.players.length === 0) {
+    throw new Error("At least one player is required");
+  }
+
+  if (body.players.length > 50) {
+    throw new Error("A maximum of 50 players is allowed");
+  }
+
+  const players = normalizePlayers(body.players);
+  const playerIds = players.map((player) => player.id);
+  if (new Set(playerIds).size !== playerIds.length) {
+    throw new Error("Player IDs must be unique");
+  }
+
   const updatedAt = new Date().toISOString();
   const tournament = {
     slug: "wm-2026",
@@ -187,37 +200,49 @@ async function saveState(body: TournamentState): Promise<TournamentState> {
   const { error: tournamentError } = await supabase.from("tournaments").upsert(tournament, { onConflict: "slug" });
   if (tournamentError) throw tournamentError;
 
-  const { error: pointDeleteError } = await supabase
-    .from("point_entries")
-    .delete()
+  const { data: existingPlayers, error: existingPlayersError } = await supabase
+    .from("players")
+    .select("id")
     .eq("tournament_slug", tournament.slug);
-  if (pointDeleteError) throw pointDeleteError;
+  if (existingPlayersError) throw existingPlayersError;
 
-  const { error: playerDeleteError } = await supabase.from("players").delete().eq("tournament_slug", tournament.slug);
-  if (playerDeleteError) throw playerDeleteError;
+  const { error: playerUpsertError } = await supabase.from("players").upsert(
+    players.map((player, index) => ({
+      id: player.id,
+      tournament_slug: tournament.slug,
+      display_name: player.name,
+      sort_order: index,
+    })),
+    { onConflict: "id" },
+  );
+  if (playerUpsertError) throw playerUpsertError;
 
-  if (players.length > 0) {
-    const { error: playerInsertError } = await supabase.from("players").insert(
-      players.map((player, index) => ({
-        id: player.id,
-        tournament_slug: tournament.slug,
-        display_name: player.name,
-        sort_order: index,
-      })),
-    );
-    if (playerInsertError) throw playerInsertError;
+  const pointRows = players.flatMap((player) =>
+    POINT_ROUNDS.map((round) => ({
+      tournament_slug: tournament.slug,
+      player_id: player.id,
+      kicktipp_matchday: round.key,
+      points: safePoints(player.points?.[round.key]),
+      updated_at: updatedAt,
+    })),
+  );
 
-    const pointRows = players.flatMap((player) =>
-      POINT_ROUNDS.map((round) => ({
-        tournament_slug: tournament.slug,
-        player_id: player.id,
-        kicktipp_matchday: round.key,
-        points: safePoints(player.points?.[round.key]),
-      })),
-    );
+  const { error: pointUpsertError } = await supabase
+    .from("point_entries")
+    .upsert(pointRows, { onConflict: "player_id,kicktipp_matchday" });
+  if (pointUpsertError) throw pointUpsertError;
 
-    const { error: pointInsertError } = await supabase.from("point_entries").insert(pointRows);
-    if (pointInsertError) throw pointInsertError;
+  const stalePlayerIds = (existingPlayers ?? [])
+    .map((player) => player.id as string)
+    .filter((playerId) => !playerIds.includes(playerId));
+
+  if (stalePlayerIds.length > 0) {
+    const { error: stalePlayerDeleteError } = await supabase
+      .from("players")
+      .delete()
+      .eq("tournament_slug", tournament.slug)
+      .in("id", stalePlayerIds);
+    if (stalePlayerDeleteError) throw stalePlayerDeleteError;
   }
 
   return {
